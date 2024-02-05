@@ -137,6 +137,22 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
 
         self.render_parameters = RenderConf(render_mode, width, height, camera_id, camera_name)
 
+    def __reduce__(self):
+        # Here's a basic example for your Builder class:
+        # Return the class constructor and a tuple of arguments to re-create the object.
+        # Adjust as necessary if some attributes should not be pickled.
+        return (
+            self.__class__, 
+            (
+                self.task_id,
+                self.config,
+                self.render_parameters.mode,
+                self.render_parameters.width,
+                self.render_parameters.height,
+                self.render_parameters.camera_id,
+                self.render_parameters.camera_name,
+            )
+        )
     def _setup_simulation(self) -> None:
         """Set up mujoco the simulation instance."""
         self.task = self._get_task()
@@ -148,8 +164,8 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         assert hasattr(tasks, class_name), f'Task={class_name} not implemented.'
         task_class = getattr(tasks, class_name)
         task = task_class(config=self.config)
-
         task.build_observation_space()
+        # task.build_goal_position()
         return task
 
     def set_seed(self, seed: int | None = None) -> None:
@@ -177,8 +193,8 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
         self.steps = 0  # Count of steps taken in this episode
 
         self.task.reset()
-        self.task.specific_reset()
         self.task.update_world()  # refresh specific settings
+        self.task.specific_reset()
         self.task.agent.reset()
 
         cost = self._cost()
@@ -213,7 +229,7 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
 
             cost = info['cost_sum']
 
-            self.task.specific_step()
+            self.task.specific_step(action)
 
             # Goal processing
             if self.task.goal_achieved:
@@ -221,17 +237,18 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
                 if self.task.mechanism_conf.continue_goal:
                     # Update the internal layout
                     # so we can correctly resample (given objects have moved)
-                    self.task.update_layout()
+                    # self.task.update_layout()
                     # Try to build a new goal, end if we fail
-                    if self.task.mechanism_conf.terminate_resample_failure:
-                        try:
-                            self.task.update_world()
-                        except ResamplingError:
-                            # Normal end of episode
-                            self.terminated = True
-                    else:
-                        # Try to make a goal, which could raise a ResamplingError exception
-                        self.task.update_world()
+                    # if self.task.mechanism_conf.terminate_resample_failure:
+                    #     try:
+                    #         self.task.update_world()
+                    #     except ResamplingError:
+                    #         # Normal end of episode
+                    #         self.terminated = True
+                    # else:
+                    #     # Try to make a goal, which could raise a ResamplingError exception
+                    #     self.task.update_world()
+                    pass
                 else:
                     self.terminated = True
 
@@ -268,7 +285,7 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
             in_range = -reward_clip < reward < reward_clip
             if not in_range:
                 reward = np.clip(reward, -reward_clip, reward_clip)
-                print('Warning: reward was outside of range!')
+                # print('Warning: reward was outside of range!')
 
         return reward
 
@@ -315,6 +332,24 @@ class Builder(gymnasium.Env, gymnasium.utils.EzPickle):
             not self.task.observe_vision
         ), 'When you use vision envs, you should not call this function explicitly.'
         return self.task.render(cost=self.cost, **asdict(self.render_parameters))
+    
+    def compute_reward(self, next_achieved_goals, desired_goals,_):
+        "Calculate return"
+        rewards = []
+        if not len(next_achieved_goals) == len(desired_goals):
+            print("ERROR ")
+        # print(len(next_achieved_goals))
+        for i in range(len(next_achieved_goals)):
+            distance = np.linalg.norm(next_achieved_goals[i,:] - desired_goals[i,:])
+            # print(next_achieved_goals.shape, desired_goals.shape)
+            # print("distance",distance)
+            if  distance < 0.3:
+                rewards.append(20.0)
+            else:
+                rewards.append(-distance*0.1)
+                # rewards.append(-0.05)
+        
+        return rewards
 
     @property
     def action_space(self) -> gymnasium.spaces.Box:

@@ -31,6 +31,7 @@ from safety_gymnasium.utils.random_generator import RandomGenerator
 from safety_gymnasium.utils.task_utils import get_body_xvelp, quat2mat
 from safety_gymnasium.world import Engine
 
+import math
 
 BASE_DIR = os.path.dirname(safety_gymnasium.__file__)
 
@@ -45,11 +46,16 @@ class SensorConf:
         sensors_ball_joints (bool): Observe named ball joint position / velocity sensors.
         sensors_angle_components (bool): Observe sin/cos theta instead of theta.
     """
+    ##YE
+    # sensors: tuple = ('accelerometer', 'velocimeter', 'gyro', 'magnetometer')
+    sensors: tuple = ()
 
-    sensors: tuple[str, ...] = ('accelerometer', 'velocimeter', 'gyro', 'magnetometer')
-    sensors_hinge_joints: bool = True
-    sensors_ball_joints: bool = True
-    sensors_angle_components: bool = True
+    # sensors_hinge_joints: bool = True
+    # sensors_ball_joints: bool = True
+    # sensors_angle_components: bool = True
+    sensors_hinge_joints: bool = False
+    sensors_ball_joints: bool = False
+    sensors_angle_components: bool = False
 
 
 @dataclass
@@ -68,13 +74,13 @@ class SensorInfo:
         sensor_dim (list): List of sensor dimensions.
     """
 
-    hinge_pos_names: list = field(default_factory=list)
-    hinge_vel_names: list = field(default_factory=list)
-    freejoint_pos_name: str = None
-    freejoint_qvel_name: str = None
-    ballquat_names: list = field(default_factory=list)
-    ballangvel_names: list = field(default_factory=list)
-    sensor_dim: list = field(default_factory=dict)
+    hinge_pos_names: list = field(default_factory=list)# sensor_angle_compenant에 따라 인자 개수 다름
+    hinge_vel_names: list = field(default_factory=list)#
+    freejoint_pos_name: str = None#
+    freejoint_qvel_name: str = None#
+    ballquat_names: list = field(default_factory=list)# sensor_angle_compenant에 따라 인자 개수 다름
+    ballangvel_names: list = field(default_factory=list)#
+    sensor_dim: list = field(default_factory=dict)#
 
 
 @dataclass
@@ -91,12 +97,19 @@ class BodyInfo:
         nbody (int): Number of bodies in agent.
         geom_names (list): List of geom names in agent.
     """
+    ##YE
+    # nq: int = None
+    # nv: int = None
+    # nu: int = None
+    # nbody: int = None
+    # geom_names: list = field(default_factory=list)
 
-    nq: int = None
-    nv: int = None
-    nu: int = None
+    nq: int = True
+    nv: int = True
+    nu: int = True
     nbody: int = None
     geom_names: list = field(default_factory=list)
+
 
 
 @dataclass
@@ -389,7 +402,13 @@ class BaseAgent(abc.ABC):  # pylint: disable=too-many-instance-attributes
                     (4,),
                     dtype=np.float64,
                 )
-
+        ##YE
+        # obs_space_dict["goal"] = gymnasium.spaces.Box(-50.0,50.0,(2,),dtype=np.float64)
+        obs_space_dict["position"] = gymnasium.spaces.Box(-np.inf, np.inf,(2,),dtype=np.float64)
+        obs_space_dict["orientation"] = gymnasium.spaces.Box(-math.pi - 0.001, math.pi + 0.001,(1,),dtype=np.float64)
+        # obs_space_dict["orientation"] = gymnasium.spaces.Box(-1.01, 1.01,(3,3),dtype=np.float64)
+        # obs_space_dict["velocity"] = gymnasium.spaces.Box(-20, 20,(1,),dtype=np.float64)
+        # obs_space_dict["velocity"] = gymnasium.spaces.Box(-20, 20,(3,),dtype=np.float64)
         return obs_space_dict
 
     def obs_sensor(self) -> dict[str, np.ndarray]:
@@ -426,6 +445,18 @@ class BaseAgent(abc.ABC):  # pylint: disable=too-many-instance-attributes
                 obs[sensor] = self.get_sensor(sensor)
             for sensor in self.sensor_info.ballquat_names:
                 obs[sensor] = self.get_sensor(sensor)
+        # print("pose",self.pos)
+        # obs["world"] = self.world_xy(self.pos[:2])
+        obs["position"] = self.world_xy(self.pos[:2])
+        obs["orientation"] = np.array([math.atan2(self.mat[1,0],self.mat[0,0])])
+        # obs["velocity"] = np.array([np.linalg.norm(self.vel[:3])])
+        # print("mat", self.mat[:,:])
+        # print("ort",math.atan2(self.mat[1,0],self.mat[0,0]))
+        # obs["orientation"] = self.mat[:,:]
+        # print("velocity",np.linalg.norm(self.vel[:3]),"/",self.vel[:3])
+        # print(obs["velocity"])
+        # print("car_vel",self.mat[:,:] @ self.vel[:3])
+        # print("new_vel", self.mat[:,:].dot(self.vel[:3]))
 
         return obs
 
@@ -467,8 +498,10 @@ class BaseAgent(abc.ABC):  # pylint: disable=too-many-instance-attributes
         Returns:
             np.ndarray: The world XY vector to the position.
         """
-        assert pos.shape == (2,)
-        return pos - self.agent.agent_pos()[:2]  # pylint: disable=no-member
+        assert pos.shape == (2,) 
+        #YE
+        # return pos - self.agent.agent_pos()[:2]  # pylint: disable=no-member
+        return pos # current location..
 
     def keyboard_control_callback(self, key: int, action: int) -> None:
         """Callback for keyboard control.

@@ -14,7 +14,7 @@
 # ==============================================================================
 """Racecar."""
 
-from __future__ import annotations
+from typing import Optional
 
 import glfw
 import numpy as np
@@ -32,10 +32,10 @@ class Racecar(BaseAgent):
     def __init__(  # pylint: disable=too-many-arguments
         self,
         random_generator: RandomGenerator,
-        placements: list | None = None,
-        locations: list | None = None,
+        placements: Optional[list] = None,
+        locations: Optional[list] = None,
         keepout: float = 0.4,
-        rot: float | None = None,
+        rot: Optional[float] = None,
     ) -> None:
         super().__init__(
             self.__class__.__name__,

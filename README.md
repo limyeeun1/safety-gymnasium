@@ -19,7 +19,7 @@
 <a href="https://github.com/PKU-Alignment/safety-gymnasium#why-safety-gymnasium">Why Safety-Gymnasium?</a> |
   <a href="https://www.safety-gymnasium.com">Documentation</a> |
   <a href="https://github.com/PKU-Alignment/safety-gymnasium#installation">Install guide</a> |
-  <a href="https://github.com/PKU-Alignment/safety-gymnasium#customize-your-environments">Customization</a> | <a href="https://sites.google.com/view/safety-gymnasium">Video</a>
+  <a href="https://github.com/PKU-Alignment/safety-gymnasium#customize-your-environments">Customization</a>
 </p>
 
 Safety-Gymnasium is a highly scalable and customizable Safe Reinforcement Learning (SafeRL) library.
@@ -27,34 +27,7 @@ It aims to deliver a good view of benchmarking SafeRL algorithms and a standardi
 We provide a set of standard APIs which are compatible with information on constraints.
 Users can explore new insights via an elegant code framework and well-designed environments.
 
-## Citing Safety-Gymnasium
-
-If you find Safety-Gymnasium useful, please cite it in your publications.
-
-```bibtex
-@article{ji2023safety,
-  title={Safety-Gymnasium: A Unified Safe Reinforcement Learning Benchmark},
-  author={Ji, Jiaming and Zhang, Borong and Zhou, Jiayi and Pan, Xuehai and Huang, Weidong and Sun, Ruiyang and Geng, Yiran and Zhong, Yifan and Dai, Juntao and Yang, Yaodong},
-  journal={arXiv preprint arXiv:2310.12567},
-  year={2023}
-}
-```
-
 --------------------------------------------------------------------------------
-
-# Note for v1.1.0 and v1.2.0❗️❗️❗️
-
-We have updated the environments for both the Safe Vision series and the Safe Isaac Gym series. However, due to **package size constraints**, we have not yet uploaded versions **v1.1.0** and **v1.2.0** to PyPI. As a result, users are required to manually download and install. We currently recommend using GitHub's **Download zip** feature to obtain our package and access the latest environments. In the future, we plan to deploy resources separately to a cloud service to accommodate PyPI. Stay tuned for further updates.
-
-**Python 3.11 is not supported for now, due to the incompatibility of pygame.**
-```bash
-conda create -n example python=3.8
-conda activate example
-wget https://github.com/PKU-Alignment/safety-gymnasium/archive/refs/heads/main.zip
-unzip main.zip
-cd safety-gymnasium-main
-pip install -e .
-```
 
 ## Why Safety-Gymnasium?
 
@@ -96,12 +69,12 @@ Here is a list of all the environments we support for now:
   <tbody>
     <tr>
       <td rowspan="4">Safe Navigation</td>
-      <td>Button[012]</td>
+      <td>Goal[012]</td>
       <td rowspan="4">Point, Car, Doggo, Racecar, Ant</td>
       <td rowspan="4">SafetyPointGoal1-v0</td>
     </tr>
     <tr>
-      <td>Goal[012]</td>
+      <td>Button[012]</td>
     </tr>
     <tr>
       <td>Push[012]</td>
@@ -110,95 +83,15 @@ Here is a list of all the environments we support for now:
       <td>Circle[012]</td>
     </tr>
     <tr>
-      <td>Safe Velocity</td>
+      <td>Velocity</td>
       <td>Velocity</td>
       <td>HalfCheetah, Hopper, Swimmer, Walker2d, Ant, Humanoid</td>
       <td>SafetyAntVelocity-v1</td>
     </tr>
-    <tr>
-      <td rowspan="7">Safe Vision</td>
-      <td>BuildingButton[012]</td>
-      <td rowspan="7">Point, Car, Doggo, Racecar, Ant</td>
-      <td rowspan="7">SafetyFormulaOne1-v0</td>
-    </tr>
-    <tr>
-      <td>BuildingGoal[012]</td>
-    </tr>
-    <tr>
-      <td>BuildingPush[012]</td>
-    </tr>
-    <tr>
-      <td>FadingEasy[012]</td>
-    </tr>
-    <tr>
-      <td>FadingHard[012]</td>
-    </tr>
-    <tr>
-      <td>Race[012]</td>
-    </tr>
-    <tr>
-      <td>FormulaOne[012]</td>
-    </tr>
-    <tr>
-      <td rowspan="8">Safe Multi-Agent</td>
-      <td>MultiGoal[012]</td>
-      <td>Multi-Point, Multi-Ant</td>
-      <td>SafetyAntMultiGoal1-v0</td>
-    </tr>
-    <tr>
-      <td>Multi-Agent Velocity</td>
-      <td>6x1HalfCheetah, 2x3HalfCheetah, 3x1Hopper, 2x1Swimmer, 2x3Walker2d, 2x4Ant, 4x2Ant, 9|8Humanoid</td>
-      <td>Safety2x4AntVelocity-v0</td>
-    </tr>
-    <tr>
-      <td>FreightFrankaCloseDrawer(Multi-Agent)</td>
-      <td rowspan="2">FreightFranka</td>
-      <td rowspan="2">FreightFrankaCloseDrawer(Multi-Agent)</td>
-    </tr>
-    <tr>
-      <td>FreightFrankaPickAndPlace(Multi-Agent)</td>
-    </tr>
-    <tr>
-      <td>ShadowHandCatchOver2UnderarmSafeFinger(Multi-Agent)</td>
-      <td rowspan="4">ShadowHands</td>
-      <td rowspan="4">ShadowHandCatchOver2UnderarmSafeJoint(Multi-Agent)</td>
-    </tr>
-    <tr>
-      <td>ShadowHandCatchOver2UnderarmSafeJoint(Multi-Agent)</td>
-    </tr>
-    <tr>
-      <td>ShadowHandOverSafeFinger(Multi-Agent)</td>
-    </tr>
-    <tr>
-      <td>ShadowHandOverSafeJoint(Multi-Agent)</td>
-    </tr>
-    <tr>
-      <td rowspan="6">Safe Isaac Gym</td>
-      <td>FreightFrankaCloseDrawer</td>
-      <td rowspan="2">FreightFranka</td>
-      <td rowspan="2">FreightFrankaCloseDrawer</td>
-    </tr>
-    <tr>
-      <td>FreightFrankaPickAndPlace</td>
-    </tr>
-    <tr>
-      <td>ShadowHandCatchOver2UnderarmSafeFinger</td>
-      <td rowspan="4">ShadowHands</td>
-      <td rowspan="4">ShadowHandCatchOver2UnderarmSafeJoint</td>
-    </tr>
-    <tr>
-      <td>ShadowHandCatchOver2UnderarmSafeJoint</td>
-    </tr>
-    <tr>
-      <td>ShadowHandOverSafeFinger</td>
-    </tr>
-    <tr>
-      <td>ShadowHandOverSafeJoint</td>
-    </tr>
   </tbody>
 </table>
 
-Here are some screenshots of the **Safe Navigation** tasks.
+Here are some screenshots of the Safe Navigation tasks.
 
 #### Agents
 
@@ -241,8 +134,8 @@ Here are some screenshots of the **Safe Navigation** tasks.
       <td>
         <figure class="align-default">
           <a class="reference external image-reference" href="agents/doggo.html"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/images/doggo_front.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/images/doggo_front.jpeg"
+              alt="https://github.com/zmsn-2077/safety-gymnasium-zmsn/raw/HEAD/images/doggo_front.jpeg"
+              src="https://github.com/zmsn-2077/safety-gymnasium-zmsn/raw/HEAD/images/doggo_front.jpeg"
               style="width: 130px;"></a>
         </figure>
         <p class="centered">
@@ -399,82 +292,15 @@ Here are some screenshots of the **Safe Navigation** tasks.
   </tbody>
 </table>
 
-### Vision-based Safe RL
+### Vision-base Safe RL
 
-Vision-based SafeRL lacks realistic scenarios.
+Vision-based safety reinforcement learning lacks realistic scenarios.
 Although the original `Safety-Gym` could minimally support visual input, the scenarios were too similar.
-To facilitate the validation of visual-based SafeRL algorithms, we have developed a set of realistic vision-based SafeRL tasks, which are currently being validated on the baseline.
+To facilitate the validation of visual-based safety reinforcement learning algorithms, we have developed a set of realistic vision-based SafeRL tasks, which are currently being validated on the baseline.
 
 For the appetizer, the images are as follows:
 
-<table class="docutils align-default">
-  <tbody>
-    <tr class="row-odd">
-      <td>
-        <figure class="align-default">
-          <a class="reference external image-reference"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/race0.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/race0.jpeg" style="width: 230px;"></a>
-        </figure>
-        <p class="centered">
-          <strong><a class="reference internal"><span class="std std-ref">Race0</span></a></strong>
-        </p>
-      </td>
-      <td>
-        <figure class="align-default">
-          <a class="reference external image-reference"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/race1.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/race1.jpeg" style="width: 230px;"></a>
-        </figure>
-        <p class="centered">
-          <strong><a class="reference internal"><span class="std std-ref">Race1</span></a></strong>
-        </p>
-      </td>
-      <td>
-        <figure class="align-default">
-          <a class="reference external image-reference"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/race2.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/race2.jpeg" style="width: 230px;"></a>
-        </figure>
-        <p class="centered">
-          <strong><a class="reference internal"><span class="std std-ref">Race2</span></a></strong>
-        </p>
-      </td>
-    </tr>
-    <tr class="row-odd">
-      <td>
-        <figure class="align-default">
-          <a class="reference external image-reference"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/formula_one0.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/formula_one0.jpeg" style="width: 230px;"></a>
-        </figure>
-        <p class="centered">
-          <strong><a class="reference internal"><span class="std std-ref">FormulaOne0</span></a></strong>
-        </p>
-      </td>
-      <td>
-        <figure class="align-default">
-          <a class="reference external image-reference"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/formula_one1.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/formula_one1.jpeg" style="width: 230px;"></a>
-        </figure>
-        <p class="centered">
-          <strong><a class="reference internal"><span class="std std-ref">FormulaOne1</span></a></strong>
-        </p>
-      </td>
-      <td>
-        <figure class="align-default">
-          <a class="reference external image-reference"><img
-              alt="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/formula_one2.jpeg"
-              src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/docs/_static/images/formula_one2.jpeg" style="width: 230px;"></a>
-        </figure>
-        <p class="centered">
-          <strong><a class="reference internal"><span class="std std-ref">FormulaOne2</span></a></strong>
-        </p>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<img src="https://github.com/PKU-Alignment/safety-gymnasium/raw/HEAD/images/vision_input.png" width="100%"/>
 
 ### Environment Usage
 
@@ -587,19 +413,11 @@ apt-get install python3-opengl
 
 --------------------------------------------------------------------------------
 
-## Debug with your keyboard
-
-For simple agents, we offer the capability to control the robot's movement via the keyboard, facilitating debugging. Simply append a **Debug** suffix to the task name, such as `SafetyCarGoal2Debug-v0`, and utilize the keys `I`, `K`, `J`, and `L` to guide the robot's movement.
-
-For more intricate agents, you can also craft custom control logic based on specific peripherals. To achieve this, implement the `debug` method from the `BaseAgent` for the designated agent.
-
-
-
 ## Customize your environments
 
 We construct a highly expandable framework of code so that you can easily comprehend it and design your environments to facilitate your research with no more than 100 lines of code on average.
 
-For details, please refer to our [documentation](https://www.safety-gymnasium.com/en/latest/components_of_environments/tasks/task_example.html).
+For details, please refer to our documentation.
 Here is a minimal example:
 
 ```python
@@ -640,6 +458,20 @@ class MytaskLevel0(BaseTask):
         # depending on your task
 ```
 
+## Citing Safety-Gymnasium
+
+If you find Safety-Gymnasium useful, please cite it in your publications.
+
+```bibtex
+@article{Safety-Gymnasium,
+  author = {Jiaming Ji and Borong Zhang and Xuehai Pan and Jiayi Zhou and Juntao Dai and Yaodong Yang},
+  title = {Safety-Gymnasium},
+  year = {2023},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/PKU-Alignment/safety-gymnasium}},
+}
+```
 
 ## License
 

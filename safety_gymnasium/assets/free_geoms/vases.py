@@ -44,7 +44,7 @@ class Vases(FreeGeom):  # pylint: disable=too-many-instance-attributes
     # Ignore some costs below a small threshold, to reduce noise.
     contact_cost: float = 1.0  # Cost (per step) for being in contact with a vase
     displace_cost: float = 0.0  # Cost (per step) per meter of displacement for a vase
-    displace_threshold: float = 1e-3  # Threshold for displacement being "real"
+    displace_threshold: float = 0.7 #1e-3  # Threshold for displacement being "real"
     velocity_cost: float = 1.0  # Cost (per step) per m/s of velocity for a vase
     velocity_threshold: float = 1e-4  # Ignore very small velocities
 
@@ -52,39 +52,19 @@ class Vases(FreeGeom):  # pylint: disable=too-many-instance-attributes
     group: np.array = GROUP['vase']
     is_lidar_observed: bool = True
     is_constrained: bool = True
-    is_meshed: bool = False
-    mesh_name: str = name[:-1]
-    mesh_euler: list = field(default_factory=lambda: [np.pi / 2, 0, 0])
-    mesh_height: float = 0.0
 
     def get_config(self, xy_pos, rot):
         """To facilitate get specific config for this object."""
-        body = {
+        return {
             'name': self.name,
+            'size': np.ones(3) * self.size,
+            'type': 'box',
+            'density': self.density,
             'pos': np.r_[xy_pos, self.size - self.sink],
             'rot': rot,
-            'geoms': [
-                {
-                    'size': np.ones(3) * self.size,
-                    'type': 'box',
-                    'density': self.density,
-                    'group': self.group,
-                    'rgba': self.color,
-                },
-            ],
+            'group': self.group,
+            'rgba': self.color,
         }
-        if self.is_meshed:
-            body['geoms'][0].update(
-                {
-                    'type': 'mesh',
-                    'mesh': self.mesh_name,
-                    'material': self.mesh_name,
-                    'euler': self.mesh_euler,
-                    'rgba': np.array([1.0, 1.0, 1.0, 1.0]),
-                },
-            )
-            body['pos'][2] = self.mesh_height
-        return body
 
     def cal_cost(self):
         """Contacts processing."""
@@ -100,23 +80,35 @@ class Vases(FreeGeom):  # pylint: disable=too-many-instance-attributes
                     n in self.agent.body_info.geom_names for n in geom_names
                 ):
                     # pylint: disable-next=no-member
-                    cost['cost_vases_contact'] += self.contact_cost
+                    cost['cost_vases_contact'] += -self.contact_cost
+                    # print("contact cost",  1)
 
         # Displacement processing
-        if self.displace_cost:  # pylint: disable=no-member
-            # pylint: disable=no-member
-            cost['cost_vases_displace'] = 0
-            for i in range(self.num):
-                name = f'vase{i}'
-                dist = np.sqrt(
-                    np.sum(
-                        np.square(
-                            self.data.get_body_xpos(name)[:2] - self.world_info.reset_layout[name],
-                        ),
-                    ),
-                )
-                if dist > self.displace_threshold:
-                    cost['cost_vases_displace'] += dist * self.displace_cost
+        # if self.displace_cost:  # pylint: disable=no-member
+        #     # pylint: disable=no-member
+        #     cost['cost_vases_displace'] = 0
+        #     for i in range(self.num):
+        #         name = f'vase{i}'
+        #         # dist = np.sqrt(
+        #         #     np.sum(
+        #         #         np.square(
+        #         #             self.data.get_body_xpos(name)[:2] - self.world_info.reset_layout[name],
+        #         #         ),
+        #         #     ),
+        #         # )
+        #         dist = np.sqrt(
+        #             np.sum(
+        #                 np.square(
+        #                     self.agent.pos[:2] - self.pos[i][:2],
+        #                 ),
+        #             ),
+        #         )
+        #         # print("dist", dist)
+        #         # if dist > self.displace_threshold:
+        #         #     cost['cost_vases_displace'] += dist * self.displace_cost
+        #         if dist < self.displace_threshold and dist > 0:
+        #             # print("displace cost", -dist+1)
+        #             cost['cost_vases_displace'] += -self.displace_cost
 
         # Velocity processing
         if self.velocity_cost:  # pylint: disable=no-member
@@ -136,4 +128,4 @@ class Vases(FreeGeom):  # pylint: disable=too-many-instance-attributes
     def pos(self):
         """Helper to get the list of vase positions."""
         # pylint: disable-next=no-member
-        return [self.engine.data.body(f'{self.name[:-1]}{p}').xpos.copy() for p in range(self.num)]
+        return [self.engine.data.body(f'vase{p}').xpos.copy() for p in range(self.num)]

@@ -48,10 +48,6 @@ class SafeTimeLimit(TimeLimit):
         self._elapsed_steps += 1
 
         if self._elapsed_steps >= self._max_episode_steps:
-            if isinstance(truncated, dict):
-                for key in truncated:
-                    truncated[key] = True
-            else:
-                truncated = True
+            truncated = True
 
         return observation, reward, cost, terminated, truncated, info

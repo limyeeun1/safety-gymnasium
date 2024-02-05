@@ -16,6 +16,8 @@
 
 from safety_gymnasium.assets.geoms import Goal
 from safety_gymnasium.bases.base_task import BaseTask
+from safety_gymnasium.assets.free_geoms import Vases
+
 
 
 class GoalLevel0(BaseTask):
@@ -26,28 +28,37 @@ class GoalLevel0(BaseTask):
 
         self.placements_conf.extents = [-1, -1, 1, 1]
 
-        self._add_geoms(Goal(keepout=0.305))
+        # self._add_geoms(Goal(locations=[[1,1]]))
+        self._add_geoms(Goal(locations=[[1,1]],keepout=0.305))
+
+        self._add_free_geoms(Vases(num=1, is_constrained=True,size=0.5,locations=[[-0.5,-0.5]]))
 
         self.last_dist_goal = None
+
 
     def calculate_reward(self):
         """Determine reward depending on the agent and tasks."""
         # pylint: disable=no-member
         reward = 0.0
         dist_goal = self.dist_goal()
-        reward += (self.last_dist_goal - dist_goal) * self.goal.reward_distance
-        self.last_dist_goal = dist_goal
+        # reward += (self.last_dist_goal - dist_goal) * self.goal.reward_distance
+        # self.last_dist_goal = dist_goal
 
+        # if self.goal_achieved:
+        #     reward += self.goal.reward_goal
         if self.goal_achieved:
-            reward += self.goal.reward_goal
+            reward += 0
+        else:
+            reward += -dist_goal * 0.1
+            # reward += -0.05 
 
         return reward
 
     def specific_reset(self):
         pass
 
-    def specific_step(self):
-        pass
+    # def specific_step(self):
+    #     pass
 
     def update_world(self):
         """Build a new goal position, maybe with resampling due to hazards."""
@@ -58,4 +69,5 @@ class GoalLevel0(BaseTask):
     def goal_achieved(self):
         """Whether the goal of task is achieved."""
         # pylint: disable-next=no-member
-        return self.dist_goal() <= self.goal.size
+        # if self.dist_goal() <= self.goal.size :
+        return self.dist_goal() <= self.goal.size 

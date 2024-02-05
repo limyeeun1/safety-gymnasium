@@ -14,7 +14,8 @@
 # ==============================================================================
 """Wrapper for rescaling actions to within a max and min action."""
 
-from __future__ import annotations
+
+from typing import Union
 
 import gymnasium
 import numpy as np
@@ -38,8 +39,8 @@ class SafeRescaleAction(gymnasium.ActionWrapper, gymnasium.utils.RecordConstruct
     def __init__(
         self,
         env: gymnasium.Env,
-        min_action: float | np.ndarray,
-        max_action: float | np.ndarray,
+        min_action: Union[float, int, np.ndarray],
+        max_action: Union[float, int, np.ndarray],
     ) -> None:
         """Initializes the :class:`RescaleAction` wrapper.
 

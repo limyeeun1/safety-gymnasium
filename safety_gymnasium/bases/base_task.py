@@ -28,7 +28,7 @@ import yaml
 
 import safety_gymnasium
 from safety_gymnasium.bases.underlying import Underlying
-from safety_gymnasium.utils.common_utils import ResamplingError, camel_to_snake
+from safety_gymnasium.utils.common_utils import ResamplingError
 from safety_gymnasium.utils.task_utils import theta2vec
 
 
@@ -77,8 +77,8 @@ class RewardConf:
     reward_orientation: bool = False
     reward_orientation_scale: float = 0.002
     reward_orientation_body: str = 'agent'
-    reward_exception: float = -10.0
-    reward_clip: float = 10
+    reward_exception: float = -20.0
+    reward_clip: float = 20
 
 
 @dataclass
@@ -107,7 +107,7 @@ class MechanismConf:
 
     randomize_layout: bool = True
     continue_goal: bool = True
-    terminate_resample_failure: bool = True
+    terminate_resample_failure: bool = False
 
 
 @dataclass
@@ -178,7 +178,6 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
         """
         super().__init__(config=config)
 
-        self.task_name: str
         self.num_steps = 1000  # Maximum number of environment steps in an episode
 
         self.lidar_conf = LidarConf()
@@ -195,15 +194,12 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
         self.static_geoms_names: dict
         self.static_geoms_contact_cost: float = None
 
+        self.previous_action = np.array([0,0])
+
     def dist_goal(self) -> float:
-        """Return the distance from the agent to the goal XY position."""
+        """Return the distance from the self._obstacles to the goal XY position."""
         assert hasattr(self, 'goal'), 'Please make sure you have added goal into env.'
         return self.agent.dist_xy(self.goal.pos)  # pylint: disable=no-member
-
-    def dist_staged_goal(self) -> float:
-        """Return the distance from the agent to the goal XY position."""
-        assert hasattr(self, 'staged_goal'), 'Please make sure you have added goal into env.'
-        return self.agent.dist_xy(self.staged_goal.pos)  # pylint: disable=no-member
 
     def calculate_cost(self) -> dict:
         """Determine costs depending on the agent and obstacles."""
@@ -233,8 +229,9 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
     def build_observation_space(self) -> gymnasium.spaces.Dict:
         """Construct observation space.  Happens only once during __init__ in Builder."""
         obs_space_dict = OrderedDict()  # See self.obs()
-
-        obs_space_dict.update(self.agent.build_sensor_observation_space())
+        # print("obs_space_dict1",obs_space_dict)
+        obs_space_dict.update(self.agent.build_sensor_observation_space()) 
+        # print("obs_space_dict2",obs_space_dict)
 
         for obstacle in self._obstacles:
             if obstacle.is_lidar_observed:
@@ -265,7 +262,16 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
                 dtype=np.uint8,
             )
 
+        obs_space_dict['goal'] = gymnasium.spaces.Box(-50.0,50.0,(2,),dtype=np.float64) # YE
+        obs_space_dict['p_action'] = gymnasium.spaces.Box(-np.inf, np.inf,(2,),dtype=np.float64)
+
+
+        # obs_space_dict['goal'] = self.world_info.layout['goal'] 
+
         self.obs_info.obs_space_dict = gymnasium.spaces.Dict(obs_space_dict)
+
+        # print("obs_space_dict3",obs_space_dict)
+
 
         if self.observation_flatten:
             self.observation_space = gymnasium.spaces.utils.flatten_space(
@@ -273,6 +279,7 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
             )
         else:
             self.observation_space = self.obs_info.obs_space_dict
+        
 
     def _build_placements_dict(self) -> None:
         """Build a dict of placements.
@@ -305,9 +312,6 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
         else:
             world_config['agent_rot'] = float(self.agent.rot)
 
-        self.task_name = self.__class__.__name__.split('Level', maxsplit=1)[0]
-        world_config['task_name'] = self.task_name
-
         # process world config via different objects.
         world_config.update(
             {
@@ -331,8 +335,9 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
         And have no randomness.
         Some tasks may generate cost when contacting static geoms.
         """
-        config_name = camel_to_snake(self.task_name)
-        level = int(self.__class__.__name__.split('Level')[1])
+        env_info = self.__class__.__name__.split('Level')
+        config_name = env_info[0].lower()
+        level = int(env_info[1])
 
         # load all config of meshes in specific environment from .yaml file
         base_dir = os.path.dirname(safety_gymnasium.__file__)
@@ -344,11 +349,7 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
             for group in meshes_config[idx].values():
                 geoms_config.update(group)
                 for item in group.values():
-                    if 'geoms' in item:
-                        for geom in item['geoms']:
-                            self.static_geoms_names.add(geom['name'])
-                    else:
-                        self.static_geoms_names.add(item['name'])
+                    self.static_geoms_names.add(item['name'])
 
     def build_goal_position(self) -> None:
         """Build a new goal position, maybe with resampling due to hazards."""
@@ -365,21 +366,6 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
             'goal'
         ]
         self._set_goal(self.world_info.layout['goal'])
-        mujoco.mj_forward(self.model, self.data)  # pylint: disable=no-member
-
-    def build_staged_goal_position(self) -> None:
-        """Build a new goal position, maybe with resampling due to hazards."""
-        # Resample until goal is compatible with layout
-        if 'staged_goal' in self.world_info.layout:
-            del self.world_info.layout['staged_goal']
-        self.world_info.layout['staged_goal'] = np.array(
-            self.staged_goal.get_next_goal_xy(),  # pylint: disable=no-member
-        )
-        # Move goal geom to new layout position
-        self.world_info.world_config_dict['geoms']['staged_goal']['pos'][
-            :2
-        ] = self.world_info.layout['staged_goal']
-        self._set_goal(self.world_info.layout['staged_goal'], 'staged_goal')
         mujoco.mj_forward(self.model, self.data)  # pylint: disable=no-member
 
     def _placements_dict_from_object(self, object_name: dict) -> dict:
@@ -427,13 +413,20 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
 
         if self.observe_vision:
             obs['vision'] = self._obs_vision()
+        # if 'goal' in self.world_info.layout:
+            
+        obs['goal'] = self.world_info.layout['goal']
+        obs['p_action'] = self.previous_action
 
         assert self.obs_info.obs_space_dict.contains(
             obs,
         ), f'Bad obs {obs} {self.obs_info.obs_space_dict}'
-
+        
+        # print("befor obs",obs)
         if self.observation_flatten:
             obs = gymnasium.spaces.utils.flatten(self.obs_info.obs_space_dict, obs)
+        # print("space dict",self.obs_info.obs_space_dict)
+        #YE
         return obs
 
     def _obs_lidar(self, positions: np.ndarray | list, group: int) -> np.ndarray:
@@ -576,18 +569,22 @@ class BaseTask(Underlying):  # pylint: disable=too-many-instance-attributes,too-
     @abc.abstractmethod
     def calculate_reward(self) -> float:
         """Determine reward depending on the agent and tasks."""
+        """i dont know"""
 
     @abc.abstractmethod
     def specific_reset(self) -> None:
         """Set positions and orientations of agent and obstacles."""
 
-    @abc.abstractmethod
-    def specific_step(self) -> None:
+    # @abc.abstractmethod
+    def specific_step(self,action) -> None:
         """Each task can define a specific step function.
 
         It will be called when :meth:`safety_gymnasium.builder.Builder.step()` is called using env.step().
         For example, you can do specific data modification.
         """
+        self.previous_action = action
+        # print("action", self.previous_action, "  and   " ,action)
+        # self.previous_action = action
 
     @abc.abstractmethod
     def update_world(self) -> None:

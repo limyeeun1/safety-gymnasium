@@ -405,11 +405,3 @@ Unsqueeze
 rescales
 affinely
 rescales
-Franka
-dof
-subagent
-Fixedwalls
-Translational
-translational
-instantiation
-π

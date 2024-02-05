@@ -25,10 +25,7 @@ from safety_gymnasium.bases.base_object import Geom
 
 @dataclass
 class Sigwalls(Geom):  # pylint: disable=too-many-instance-attributes
-    """None collision walls.
-
-    This class is used for showing the boundary which is forbidden for entering.
-    """
+    """Non collision object."""
 
     name: str = 'sigwalls'
     num: int = 2
@@ -38,12 +35,9 @@ class Sigwalls(Geom):  # pylint: disable=too-many-instance-attributes
     keepout: float = 0.0
 
     color: np.array = COLOR['sigwall']
-    alpha: float = 0.1
     group: np.array = GROUP['sigwall']
     is_lidar_observed: bool = False
     is_constrained: bool = False
-    is_meshed: bool = False
-    mesh_name: str = name[:-1]
 
     def __post_init__(self) -> None:
         assert self.num in (2, 4), 'Sigwalls are specific for Circle and Run tasks.'
@@ -66,35 +60,21 @@ class Sigwalls(Geom):  # pylint: disable=too-many-instance-attributes
 
     def get_config(self, xy_pos, rot):  # pylint: disable=unused-argument
         """To facilitate get specific config for this object."""
-        body = {
+        geom = {
             'name': self.name,
+            'size': np.array([0.05, self.size, 0.3]),
             'pos': np.r_[xy_pos, 0.25],
             'rot': 0,
-            'geoms': [
-                {
-                    'name': self.name,
-                    'size': np.array([0.05, self.size, 0.3]),
-                    'type': 'box',
-                    'contype': 0,
-                    'conaffinity': 0,
-                    'group': self.group,
-                    'rgba': self.color * np.array([1, 1, 1, self.alpha]),
-                },
-            ],
+            'type': 'box',
+            'contype': 0,
+            'conaffinity': 0,
+            'group': self.group,
+            'rgba': self.color * [1, 1, 1, 0.1],
         }
         if self.index >= 2:
-            body.update({'rot': np.pi / 2})
+            geom.update({'rot': np.pi / 2})
         self.index_tick()
-        if self.is_meshed:
-            body['geoms'][0].update(
-                {
-                    'type': 'mesh',
-                    'mesh': self.mesh_name,
-                    'material': self.mesh_name,
-                    'euler': [0, 0, 0],
-                },
-            )
-        return body
+        return geom
 
     def cal_cost(self):
         """Contacts Processing."""
